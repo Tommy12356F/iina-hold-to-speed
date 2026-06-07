@@ -1,14 +1,19 @@
 {
   "name": "Hold to Speed",
   "identifier": "com.vedant.hold-to-speed",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "author": {
     "name": "Vedant",
     "email": "",
     "url": ""
   },
-  "description": "Hold Space to play at 2x speed, just like YouTube. Release to return to normal speed.",
+  "description": "Hold Space to play at custom speed, just like YouTube. Release to return to normal speed.",
   "entry": "main.js",
   "minApiVersion": "1.1",
-  "minIINAVersion": "1.4.0"
+  "minIINAVersion": "1.4.0",
+  "preferencesPage": "preferences.html",
+  "preferenceDefaults": {
+    "holdSpeed": 2.0,
+    "holdDelay": 250
+  }
 }

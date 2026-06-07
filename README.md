@@ -1,14 +1,17 @@
 # iina-hold-to-speed
 
-Hold Space to play at 2× speed, just like YouTube. Release to go back to normal. Tap Space to pause/unpause as usual.
+Hold Space to play at a configurable speed, just like YouTube. Release to go back to normal. Tap Space to pause/unpause as usual.
 
 ## Features
 
-- Hold Space → 2× speed
+- Hold Space → boost to your chosen speed (default 2×)
 - Release Space → back to normal speed
 - Tap Space → pause / unpause (unchanged)
 - Saves and restores custom speeds (e.g. if you were at 1.5×)
 - OSD message on boost and restore
+- **Configurable hold speed** via plugin preferences (slider, 1.1×–10×)
+- **Configurable activation delay** via plugin preferences (0–1000ms)
+- **Context menu** → Set Hold Speed → choose from presets (1.5×, 2×, 2.5×, 3×, 4×, 5×)
 
 ## Installation
 

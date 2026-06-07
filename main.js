@@ -4,10 +4,10 @@
 // Strategy: use mpv.set("pause", ...) and mpv.set("speed", ...) directly,
 // and track pause state ourselves via the mpv.pause.changed event.
 
-const { core, input, mpv, event, console: log } = iina;
+const { core, input, mpv, event, menu, console: log } = iina;
 
-const HOLD_SPEED   = 2.0;
-const HOLD_DELAY   = 250; // ms — tweak if needed
+const getHoldSpeed = () => iina.preferences.get("holdSpeed") ?? 2.0;
+const getHoldDelay = () => iina.preferences.get("holdDelay") ?? 250;
 
 let holdTimer      = null;
 let isHolding      = false;
@@ -39,11 +39,12 @@ input.onKeyDown("Space", (data) => {
     if (!spaceDown) return;
     isHolding = true;
 
+    const speed = getHoldSpeed();
     if (isPaused) mpv.set("pause", false);
-    mpv.set("speed", HOLD_SPEED);
-    core.osd("▶▶  2× Speed");
-    log.log("[hold-to-speed] boosted to 2×");
-  }, HOLD_DELAY);
+    mpv.set("speed", speed);
+    core.osd("▶▶  " + speed + "× Speed");
+    log.log("[hold-to-speed] boosted to " + speed + "×");
+  }, getHoldDelay());
 
   return true; // consume — IINA's default Space handler never fires
 }, input.PRIORITY_HIGH);
@@ -70,5 +71,28 @@ input.onKeyUp("Space", () => {
 
   return true;
 }, input.PRIORITY_HIGH);
+
+const SPEED_PRESETS = [1.5, 2.0, 2.5, 3.0, 4.0, 5.0];
+
+function buildSpeedMenu() {
+  menu.removeAllItems();
+  const current = getHoldSpeed();
+  const parent = menu.item("Set Hold Speed", null);
+
+  SPEED_PRESETS.forEach((speed) => {
+    parent.addSubMenuItem(
+      menu.item(speed + "×", () => {
+        iina.preferences.set("holdSpeed", speed);
+        iina.preferences.persist();
+        core.osd("Hold speed: " + speed + "×");
+        buildSpeedMenu();
+      }, { selected: speed === current })
+    );
+  });
+
+  menu.addItem(parent);
+}
+
+buildSpeedMenu();
 
 log.log("[hold-to-speed] loaded");

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      padding: 16px;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      color: #1d1d1f;
+    }
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    label { width: 160px; }
+    input[type="range"] { flex: 1; margin: 0 12px; }
+    .value-display { width: 52px; text-align: right; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="row">
+    <label>Hold Speed</label>
+    <input type="range" id="speedSlider" min="1.1" max="10" step="0.1" value="2.0" />
+    <span id="speedDisplay">2.0×</span>
+  </div>
+  <div class="row">
+    <label>Activation Delay</label>
+    <input type="range" id="delaySlider" min="0" max="1000" step="50" value="250" />
+    <span id="delayDisplay">250ms</span>
+  </div>
+
+  <script>
+    function getPrefs() {
+      try { return (window.iina || iina).preferences; } catch(e) { return null; }
+    }
+
+    const prefs = getPrefs();
+
+    const speedSlider  = document.getElementById("speedSlider");
+    const delaySlider  = document.getElementById("delaySlider");
+    const speedDisplay = document.getElementById("speedDisplay");
+    const delayDisplay = document.getElementById("delayDisplay");
+
+    try {
+      if (prefs) {
+        const s = prefs.get("holdSpeed");
+        const d = prefs.get("holdDelay");
+        if (s != null) speedSlider.value = s;
+        if (d != null) delaySlider.value = d;
+      }
+    } catch(e) {}
+
+    speedDisplay.textContent = parseFloat(speedSlider.value).toFixed(1) + "×";
+    delayDisplay.textContent = parseInt(delaySlider.value) + "ms";
+
+    function onSpeed() {
+      const val = parseFloat(speedSlider.value);
+      speedDisplay.textContent = val.toFixed(1) + "×";
+      try { if (prefs) { prefs.set("holdSpeed", val); prefs.persist(); } } catch(e) {}
+    }
+
+    function onDelay() {
+      const val = parseInt(delaySlider.value);
+      delayDisplay.textContent = val + "ms";
+      try { if (prefs) { prefs.set("holdDelay", val); prefs.persist(); } } catch(e) {}
+    }
+
+    speedSlider.addEventListener("input", onSpeed);
+    speedSlider.addEventListener("change", onSpeed);
+    delaySlider.addEventListener("input", onDelay);
+    delaySlider.addEventListener("change", onDelay);
+
+    let dragging = false;
+    speedSlider.addEventListener("mousedown", () => { dragging = true; });
+    delaySlider.addEventListener("mousedown", () => { dragging = true; });
+    document.addEventListener("mouseup", () => { dragging = false; });
+
+    setInterval(() => {
+      if (dragging || !prefs || document.hidden) return;
+      try {
+        const s = prefs.get("holdSpeed");
+        const d = prefs.get("holdDelay");
+        if (s != null && parseFloat(s) !== parseFloat(speedSlider.value)) {
+          speedSlider.value = s;
+          speedDisplay.textContent = parseFloat(s).toFixed(1) + "×";
+        }
+        if (d != null && parseInt(d) !== parseInt(delaySlider.value)) {
+          delaySlider.value = d;
+          delayDisplay.textContent = parseInt(d) + "ms";
+        }
+      } catch(e) {}
+    }, 1000);
+  </script>
+</body>
+</html>
