@@ -27,6 +27,11 @@
     <span id="speedDisplay">2.0×</span>
   </div>
   <div class="row">
+    <label>Slow-Mo Speed</label>
+    <input type="range" id="slowSlider" min="0.1" max="0.9" step="0.05" value="0.5" />
+    <span id="slowDisplay">0.50×</span>
+  </div>
+  <div class="row">
     <label>Activation Delay</label>
     <input type="range" id="delaySlider" min="0" max="1000" step="50" value="250" />
     <span id="delayDisplay">250ms</span>
@@ -41,6 +46,8 @@
 
     const speedSlider  = document.getElementById("speedSlider");
     const delaySlider  = document.getElementById("delaySlider");
+    const slowSlider   = document.getElementById("slowSlider");
+    const slowDisplay  = document.getElementById("slowDisplay");
     const speedDisplay = document.getElementById("speedDisplay");
     const delayDisplay = document.getElementById("delayDisplay");
 
@@ -50,11 +57,20 @@
         const d = prefs.get("holdDelay");
         if (s != null) speedSlider.value = s;
         if (d != null) delaySlider.value = d;
+        const sl = prefs.get("slowSpeed");
+        if (sl != null) slowSlider.value = sl;
       }
     } catch(e) {}
 
     speedDisplay.textContent = parseFloat(speedSlider.value).toFixed(1) + "×";
     delayDisplay.textContent = parseInt(delaySlider.value) + "ms";
+    slowDisplay.textContent  = parseFloat(slowSlider.value).toFixed(2) + "×";
+
+    function onSlow() {
+      const val = parseFloat(slowSlider.value);
+      slowDisplay.textContent = val.toFixed(2) + "×";
+      try { if (prefs) { prefs.set("slowSpeed", val); prefs.persist(); } } catch(e) {}
+    }
 
     function onSpeed() {
       const val = parseFloat(speedSlider.value);
@@ -72,10 +88,13 @@
     speedSlider.addEventListener("change", onSpeed);
     delaySlider.addEventListener("input", onDelay);
     delaySlider.addEventListener("change", onDelay);
+    slowSlider.addEventListener("input", onSlow);
+    slowSlider.addEventListener("change", onSlow);
 
     let dragging = false;
     speedSlider.addEventListener("mousedown", () => { dragging = true; });
     delaySlider.addEventListener("mousedown", () => { dragging = true; });
+    slowSlider.addEventListener("mousedown", () => { dragging = true; });
     document.addEventListener("mouseup", () => { dragging = false; });
 
     setInterval(() => {
@@ -86,6 +105,11 @@
         if (s != null && parseFloat(s) !== parseFloat(speedSlider.value)) {
           speedSlider.value = s;
           speedDisplay.textContent = parseFloat(s).toFixed(1) + "×";
+        }
+        const sl = prefs.get("slowSpeed");
+        if (sl != null && parseFloat(sl) !== parseFloat(slowSlider.value)) {
+          slowSlider.value = sl;
+          slowDisplay.textContent = parseFloat(sl).toFixed(2) + "×";
         }
         if (d != null && parseInt(d) !== parseInt(delaySlider.value)) {
           delaySlider.value = d;
