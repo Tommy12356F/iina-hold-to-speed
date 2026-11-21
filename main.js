@@ -22,13 +22,32 @@ let mouseDown   = false;
 let slowDown    = false;
 
 // ── Pause state tracking ─────────────────────────────────────────────────────
-event.on("mpv.pause.changed", () => {
+// Always read the real state from mpv when deciding what to do. The cached
+// copy can go stale (e.g. plugin loaded while already paused, missed event),
+// which made a tap "toggle" to the state it was already in — i.e. do nothing.
+function syncPaused() {
   isPaused = mpv.getFlag("pause");
-});
+  return isPaused;
+}
+
+event.on("mpv.pause.changed", syncPaused);
 
 event.on("iina.file-loaded", () => {
-  isPaused = mpv.getFlag("pause");
+  syncPaused();
   if (appliedMode === null) savedSpeed = mpv.getNumber("speed") || 1.0;
+});
+
+// If the player window loses focus while a key is held, its key-up never
+// arrives. Release everything so no trigger gets stuck "down" (which swallowed
+// the next real key press) and any active boost/slow-mo is restored.
+event.on("iina.window-main.changed", (isMain) => {
+  if (isMain) return;
+  speedDown = mouseDown = slowDown = false;
+  if (holdTimer !== null) {
+    clearTimeout(holdTimer);
+    holdTimer = null;
+  }
+  applyMode();
 });
 
 // ── Shared hold logic ────────────────────────────────────────────────────────
@@ -73,7 +92,7 @@ function startHold() {
   holdTimer = setTimeout(() => {
     holdTimer = null;
     if (wantedMode() === null) return;
-    if (isPaused) mpv.set("pause", false);
+    if (syncPaused()) mpv.set("pause", false);
     applyMode();
   }, getHoldDelay());
 }
@@ -90,8 +109,9 @@ function endHold(wasTap) {
   }
 
   if (wasTap) {
-    mpv.set("pause", !isPaused);
-    log.log("[hold-to-speed] tap: pause=" + !isPaused);
+    const nowPaused = !syncPaused();
+    mpv.set("pause", nowPaused);
+    log.log("[hold-to-speed] tap: pause=" + nowPaused);
   }
 }
 
